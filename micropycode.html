@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyPrint Ultra ♾️</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- PrismJS for Real-Time Syntax Highlighting -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       ULTRA PRINT ENGINE ♾️ - SUPER DYNAMIC AUTO-FIT
+       ========================================================================== */
+    @media print {
+      /* MATHEMATICAL PERFECTION FOR A4 CENTERED CUTS */
+      @page { 
+        size: A4 portrait; 
+        margin: 36mm 17.5mm; 
+      }
+      
+      body.landscape-mode @page {
+        size: A4 landscape;
+        margin: 17.5mm 36mm;
+      }
+      
+      body, html { 
+        background: white !important; 
+        color: black !important;
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important; 
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important; /* ALLOW NATIVE FLOW / NO HIDE */
+      }
+      
+      .no-print { display: none !important; }
+      
+      .print-reset-layout {
+         display: block !important;
+         width: 100% !important;
+         height: auto !important;
+         min-height: 0 !important;
+         overflow: visible !important;
+         margin: 0 !important;
+         padding: 0 !important;
+         position: static !important;
+      }
+
+      /* Dynamically adjusting master page wrapper */
+      .print-flex-page {
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+      }
+
+      body.portrait-mode .print-flex-page {
+        width: 17.5cm !important;
+        min-height: 22.5cm !important;
+      }
+
+      body.landscape-mode .print-flex-page {
+        width: 25.5cm !important;
+        min-height: 15.5cm !important;
+      }
+      
+      /* Grid that grows dynamically based on content */
+      #layout-4up-container { 
+        display: grid !important; 
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8mm !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+
+      body.portrait-mode #layout-4up-container {
+        width: 17.5cm !important;
+        grid-template-rows: minmax(calc(50% - 4mm), auto) minmax(calc(50% - 4mm), auto) !important;
+      }
+
+      body.landscape-mode #layout-4up-container {
+        width: 25.5cm !important;
+        grid-template-rows: minmax(calc(50% - 4mm), auto) minmax(calc(50% - 4mm), auto) !important;
+      }
+
+      /* Super Dynamic Cut Boxes */
+      .cut-box {
+        width: 100% !important;
+        height: 100% !important;
+        overflow: visible !important;
+        page-break-inside: auto !important; /* Allow huge boxes to span pages */
+        break-inside: auto !important;
+      }
+
+      body.hide-cut-lines .cut-marker { display: none !important; }
+
+      /* Header Protection */
+      .print-keep-with-next { 
+        break-after: avoid !important; 
+        page-break-after: avoid !important; 
+        break-inside: avoid !important; 
+      }
+      
+      /* RIGID CODE BLOCK CONSTRAINTS - NO OVERLAP, AUTO WRAP, NO SCROLL */
+      pre[class*="language-"], code[class*="language-"] { 
+        white-space: pre-wrap !important; 
+        word-wrap: break-word !important; 
+        overflow-wrap: break-word !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+        overflow: visible !important; /* FORCE NO SCROLL */
+        height: auto !important;
+        display: block !important;
+      }
+    }
+    
+    /* ==========================================================================
+       ULTRA UI/UX STYLES
+       ========================================================================== */
+    .glass-nav {
+      background: rgba(10, 12, 16, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .animated-bg {
+      background: linear-gradient(-45deg, #0a0c10, #111827, #0f172a, #0a0c10);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); border: 2px solid transparent; background-clip: padding-box; }
+
+    /* Custom Input Glowing Focus */
+    .ultra-input:focus {
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+      border-color: #38bdf8;
+    }
+
+    /* Enforce Black & Bold Syntax on Paper (For Readability) */
+    .cut-box pre[class*="language-"] code, 
+    .cut-box pre[class*="language-"] .token {
+      color: #000 !important;
+      text-shadow: none !important;
+      font-weight: bold !important;
+    }
+
+    /* Prism Editor Sync Hack */
+    .editor-wrapper { position: relative; }
+    .highlight-layer, .input-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      padding: 1.25rem; font-family: monospace; font-size: 14px; line-height: 1.5;
+      white-space: pre-wrap; word-wrap: break-word; overflow-y: auto;
+    }
+    .input-layer {
+      color: transparent; background: transparent; caret-color: #fff; z-index: 2; resize: none;
+    }
+    .highlight-layer { z-index: 1; pointer-events: none; }
+    
+    /* Layout specific live preview sizing */
+    body.portrait-mode .print-flex-page { width: 17.5cm; min-height: 22.5cm; }
+    body.portrait-mode #layout-4up-container { grid-template-rows: minmax(calc(50% - 4mm), auto) minmax(calc(50% - 4mm), auto); }
+    
+    body.landscape-mode .print-flex-page { width: 25.5cm; min-height: 15.5cm; }
+    body.landscape-mode #layout-4up-container { grid-template-rows: minmax(calc(50% - 4mm), auto) minmax(calc(50% - 4mm), auto); }
+
+    /* Hide default scrollbars in code wrappers for print integrity */
+    .no-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scroll::-webkit-scrollbar { display: none; }
+
+  </style>
+</head>
+<body class="animated-bg h-screen font-sans text-gray-100 flex flex-col overflow-hidden print-reset-layout selection:bg-blue-500/30 portrait-mode">
+
+  <!-- ==========================================
+       ULTRA NAVBAR
+       ========================================== -->
+  <nav class="no-print glass-nav px-6 py-4 flex items-center justify-between relative z-30 shadow-2xl shrink-0">
+    <div class="flex items-center gap-4">
+      <div class="relative group cursor-pointer">
+        <div class="absolute inset-0 bg-blue-500 blur-md opacity-40 group-hover:opacity-75 transition duration-300 rounded-xl"></div>
+        <div class="relative bg-gradient-to-br from-blue-600 to-indigo-700 p-2 rounded-xl border border-white/10 shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        </div>
+      </div>
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-blue-100 to-indigo-300 bg-clip-text text-transparent drop-shadow-sm">
+          PyPrint 4-Up <span class="text-xs align-top text-blue-400 font-mono ml-1 border border-blue-500/30 px-1.5 py-0.5 rounded-full bg-blue-500/10">v11.0</span>
+        </h1>
+        <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400 font-semibold mt-0.5">Super Dynamic Auto-Fit Engine</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 border-r border-slate-700/50 pr-4 mr-1 hidden md:flex">
+        
+        <!-- NEW: Page Orientation Toggle -->
+        <select id="print-orientation" class="bg-black/40 border border-slate-600/50 rounded-lg px-3 py-1.5 text-xs font-bold text-white outline-none cursor-pointer hover:bg-black/60 transition">
+          <option value="portrait">A4 Portrait</option>
+          <option value="landscape">A4 Landscape</option>
+        </select>
+
+        <div class="h-4 w-px bg-slate-700/50 mx-1"></div>
+
+        <button id="btn-format-all" class="text-xs font-bold flex items-center gap-1.5 text-blue-300 hover:text-blue-100 transition-all active:scale-95">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg> Auto-Format All
+        </button>
+        <div class="h-4 w-px bg-slate-700/50 mx-1"></div>
+        <label class="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-300 hover:text-white transition">
+          <input type="checkbox" id="toggle-cut" class="accent-slate-500 w-3.5 h-3.5 cursor-pointer" checked>
+          Show Cut Lines
+        </label>
+      </div>
+
+      <button id="btn-print" class="group relative flex items-center gap-2 px-8 py-2.5 bg-white text-slate-900 rounded-xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] active:scale-95 overflow-hidden">
+        <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-black/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+        Print Worksheet
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       MAIN WORKSPACE
+       ========================================== -->
+  <div class="flex-1 flex flex-col lg:flex-row min-h-0 relative z-10 print-reset-layout">
+    
+    <!-- LEFT COLUMN: IDE -->
+    <div class="no-print w-full lg:w-[45%] flex flex-col border-r border-white/5 p-5 gap-6 overflow-y-auto custom-scrollbar bg-black/20 backdrop-blur-xl">
+      
+      <!-- Project Metadata Card -->
+      <div class="bg-[#121620]/80 border border-white/10 rounded-2xl p-4 shadow-xl backdrop-blur-md shrink-0">
+        <div class="flex items-center gap-2 mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-indigo-400"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">Handout Details</span>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <input type="text" id="meta-title" placeholder="Assignment / Worksheet Title" class="ultra-input col-span-3 lg:col-span-1 bg-black/40 border border-white/5 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-all">
+          <input type="text" id="meta-author" placeholder="Instructor / Student Name" class="ultra-input col-span-3 lg:col-span-1 bg-black/40 border border-white/5 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-all">
+          <input type="date" id="meta-date" class="ultra-input col-span-3 lg:col-span-1 bg-black/40 border border-white/5 rounded-lg px-3 py-2 text-sm text-slate-300 outline-none transition-all [color-scheme:dark]">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="h-px bg-white/10 flex-1"></div>
+        <span class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> 4-Up Code Slots
+        </span>
+        <div class="h-px bg-white/10 flex-1"></div>
+      </div>
+
+      <!-- ================= 4 PYTHON EDITORS ================= -->
+      <div class="flex flex-col gap-6">
+        
+        <!-- Python Code Editor 1 -->
+        <div class="shrink-0 h-[280px] flex flex-col bg-[#121620]/80 border border-white/10 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden">
+          <div class="bg-black/40 border-b border-white/5 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded text-[10px] font-black uppercase">Slot 1</span>
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">script_1.py</span>
+            </div>
+            <div class="flex gap-2">
+              <button id="btn-copy-1" class="text-xs font-bold flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-all active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy
+              </button>
+            </div>
+          </div>
+          <div class="editor-wrapper flex-1 bg-[#0d1117] custom-scrollbar">
+            <pre id="code-highlight-1" class="highlight-layer language-python !bg-transparent !m-0 !shadow-none"><code class="language-python"></code></pre>
+            <textarea id="code-input-1" spellcheck="false" class="input-layer custom-scrollbar focus:outline-none" placeholder="# Write Python code for Slot 1 here..."></textarea>
+          </div>
+        </div>
+
+        <!-- Python Code Editor 2 -->
+        <div class="shrink-0 h-[280px] flex flex-col bg-[#121620]/80 border border-white/10 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden">
+          <div class="bg-black/40 border-b border-white/5 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded text-[10px] font-black uppercase">Slot 2</span>
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">script_2.py</span>
+            </div>
+            <div class="flex gap-2">
+              <button id="btn-copy-2" class="text-xs font-bold flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-all active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy
+              </button>
+            </div>
+          </div>
+          <div class="editor-wrapper flex-1 bg-[#0d1117] custom-scrollbar">
+            <pre id="code-highlight-2" class="highlight-layer language-python !bg-transparent !m-0 !shadow-none"><code class="language-python"></code></pre>
+            <textarea id="code-input-2" spellcheck="false" class="input-layer custom-scrollbar focus:outline-none" placeholder="# Write Python code for Slot 2 here..."></textarea>
+          </div>
+        </div>
+
+        <!-- Python Code Editor 3 -->
+        <div class="shrink-0 h-[280px] flex flex-col bg-[#121620]/80 border border-white/10 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden">
+          <div class="bg-black/40 border-b border-white/5 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded text-[10px] font-black uppercase">Slot 3</span>
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">script_3.py</span>
+            </div>
+            <div class="flex gap-2">
+              <button id="btn-copy-3" class="text-xs font-bold flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-all active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy
+              </button>
+            </div>
+          </div>
+          <div class="editor-wrapper flex-1 bg-[#0d1117] custom-scrollbar">
+            <pre id="code-highlight-3" class="highlight-layer language-python !bg-transparent !m-0 !shadow-none"><code class="language-python"></code></pre>
+            <textarea id="code-input-3" spellcheck="false" class="input-layer custom-scrollbar focus:outline-none" placeholder="# Write Python code for Slot 3 here..."></textarea>
+          </div>
+        </div>
+
+        <!-- Python Code Editor 4 -->
+        <div class="shrink-0 h-[280px] flex flex-col bg-[#121620]/80 border border-white/10 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden">
+          <div class="bg-black/40 border-b border-white/5 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded text-[10px] font-black uppercase">Slot 4</span>
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">script_4.py</span>
+            </div>
+            <div class="flex gap-2">
+              <button id="btn-copy-4" class="text-xs font-bold flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-all active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy
+              </button>
+            </div>
+          </div>
+          <div class="editor-wrapper flex-1 bg-[#0d1117] custom-scrollbar">
+            <pre id="code-highlight-4" class="highlight-layer language-python !bg-transparent !m-0 !shadow-none"><code class="language-python"></code></pre>
+            <textarea id="code-input-4" spellcheck="false" class="input-layer custom-scrollbar focus:outline-none" placeholder="# Write Python code for Slot 4 here..."></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Spacer for bottom padding -->
+      <div class="h-4 shrink-0"></div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Live Print Preview -->
+    <div class="w-full lg:w-[55%] bg-[#cbd5e1] overflow-y-auto p-4 md:p-8 flex flex-col items-center custom-scrollbar print-reset-layout shadow-inner relative">
+      
+      <!-- Ambient light effect behind paper -->
+      <div class="no-print absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-white/40 blur-[100px] pointer-events-none"></div>
+
+      <div class="relative mt-8 mb-12 print-reset-layout w-full flex flex-col items-center gap-8">
+        
+        <!-- UI Label -->
+        <div class="no-print absolute -top-10 left-1/2 -translate-x-1/2 w-max max-w-full flex flex-col items-center text-slate-600 font-bold text-sm z-10 gap-2">
+          <div class="flex items-center gap-2 bg-white/70 px-4 py-2 rounded-xl shadow-md backdrop-blur-md border border-white/50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-blue-600"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span id="ui-label-text">Grid Framework: <span class="text-black">Dynamic Auto-Fit</span></span>
+          </div>
+          <span id="ui-label-badge" class="text-[10px] uppercase tracking-widest bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-md shadow-sm">No Scroll • No Hide • Auto Stretch</span>
+        </div>
+
+        <!-- ================= 4-UP HANDOUT (WORKSHEET MODE) ================= -->
+        <!-- Super dynamic container. Allows endless vertical growth without hiding text -->
+        <div class="print-flex-page" id="layout-4up-container">
+            
+            <!-- Generate 4 identical cut-boxes programmatically via JS -->
+            <template id="template-4up-box">
+              <div class="bg-white shadow-[0_10px_25px_rgba(0,0,0,0.15)] border-2 border-dashed border-slate-400 relative transition-all duration-300 cut-box flex flex-col">
+                 <!-- Cut Marker -->
+                 <div class="absolute -top-[2px] left-3 bg-white px-1.5 text-[8px] text-slate-500 font-mono tracking-widest transform -translate-y-1/2 flex items-center gap-1 cut-marker z-10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg> CUT
+                 </div>
+                 
+                 <!-- Content Box: Completely fluid -->
+                 <div class="p-[6mm] text-black w-full flex flex-col relative flex-1 h-full">
+                    <div class="meta-slot-4up shrink-0"></div> <!-- Inject Mini Meta Here -->
+                    
+                    <!-- Code Display Box: Adapts to pure content size -->
+                    <div class="code-box-wrapper bg-white border border-slate-200 rounded-xl shadow-sm print-border flex-1 flex flex-col w-full">
+                      <div class="bg-slate-50 border-b border-slate-200 px-3 py-1.5 flex items-center justify-between print-keep-with-next print-header-color shrink-0 rounded-t-xl">
+                         <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-[#ff5f56]"></div>
+                            <div class="w-2 h-2 rounded-full bg-[#ffbd2e]"></div>
+                            <div class="w-2 h-2 rounded-full bg-[#27c93f]"></div>
+                         </div>
+                         <span class="text-[9px] font-mono font-bold text-slate-600 code-title-4up">script_X.py</span>
+                         <div class="w-6"></div>
+                      </div>
+                      
+                      <!-- STRICT NO-SCROLL NO-HIDE DYNAMIC CONTAINER -->
+                      <div class="bg-white flex-1 p-3 rounded-b-xl w-full h-full relative overflow-visible flex flex-col">
+                         <!-- Uses leading-tight and break-words to perfectly wrap text downwards endlessly -->
+                         <pre class="!m-0 !p-0 !bg-transparent leading-tight break-words whitespace-pre-wrap no-scroll flex-1"><code class="language-python text-black font-bold code-preview-4up w-full block break-words whitespace-pre-wrap" style="transition: font-size 0.2s;"></code></pre>
+                      </div>
+                    </div>
+                 </div>
+              </div>
+            </template>
+            <!-- Boxes injected dynamically here -->
+        </div> 
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================
+       ULTRA LOGIC ENGINE
+       ========================================== -->
+  <script>
+    // --- Initial State ---
+    let appState = {
+      orientation: 'portrait',
+      code1: `def calculate_fibonacci(n):\n    """\n    Calculate the first n Fibonacci numbers.\n    """\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    \n    sequence = [0, 1]\n    while len(sequence) < n:\n        next_val = sequence[-1] + sequence[-2]\n        sequence.append(next_val)\n        \n    return sequence\n\nresult = calculate_fibonacci(10)\nprint(f"Fibonacci sequence: {result}")`,
+      code2: `def is_palindrome(word):\n    """Check if a string is a palindrome."""\n    cleaned = word.lower().replace(" ", "")\n    return cleaned == cleaned[::-1]\n\nprint(is_palindrome("Racecar")) # True\nprint(is_palindrome("Python"))  # False`,
+      code3: `def factorial(n):\n    """Recursive factorial calculator."""\n    if n == 0 or n == 1:\n        return 1\n    return n * factorial(n - 1)\n\nprint(f"Factorial of 5: {factorial(5)}") # 120`,
+      code4: `def is_prime(num):\n    """Determine if a number is prime."""\n    if num <= 1: return False\n    for i in range(2, int(num ** 0.5) + 1):\n        if num % i == 0: return False\n    return True\n\nprint(f"Is 17 prime? {is_prime(17)}") # True`,
+      
+      title: '',
+      author: '',
+      date: new Date().toISOString().split('T')[0] // Today
+    };
+
+    // --- DOM Elements ---
+    const els = {
+      // Multiple Python Editors
+      codeInput1: document.getElementById('code-input-1'),
+      codeHighlight1: document.getElementById('code-highlight-1').querySelector('code'),
+      codeInput2: document.getElementById('code-input-2'),
+      codeHighlight2: document.getElementById('code-highlight-2').querySelector('code'),
+      codeInput3: document.getElementById('code-input-3'),
+      codeHighlight3: document.getElementById('code-highlight-3').querySelector('code'),
+      codeInput4: document.getElementById('code-input-4'),
+      codeHighlight4: document.getElementById('code-highlight-4').querySelector('code'),
+      
+      // Meta Elements
+      metaTitle: document.getElementById('meta-title'),
+      metaAuthor: document.getElementById('meta-author'),
+      metaDate: document.getElementById('meta-date'),
+      
+      // Layout System
+      layout4upContainer: document.getElementById('layout-4up-container'),
+      orientationSelect: document.getElementById('print-orientation')
+    };
+
+    // --- Initialize 4-Up Template ---
+    function initialize4UpGrid() {
+      const template = document.getElementById('template-4up-box');
+      els.layout4upContainer.innerHTML = ''; // clear any existing
+      for(let i=1; i<=4; i++) {
+        const clone = template.content.cloneNode(true);
+        clone.querySelector('.code-preview-4up').id = `code-preview-4up-${i}`;
+        clone.querySelector('.meta-slot-4up').id = `meta-slot-4up-${i}`;
+        clone.querySelector('.code-title-4up').textContent = `script_${i}.py`;
+        els.layout4upContainer.appendChild(clone);
+      }
+    }
+    initialize4UpGrid();
+
+    // --- Dynamic Meta Header Injection ---
+    function updateMeta() {
+      // Build 4-up meta HTML (smaller font)
+      const html4Up = `
+        <div class="mb-2 border-b-2 border-slate-800 pb-1 flex justify-between items-end print-avoid-break-inside">
+          <div class="min-w-0 flex-1 pr-2">
+            <h1 class="text-[11px] font-black text-slate-900 tracking-tight leading-tight break-words">${appState.title || 'Untitled Project'}</h1>
+            <p class="text-[8px] font-bold text-slate-600 uppercase tracking-wider break-words">${appState.author || 'Anonymous'}</p>
+          </div>
+          <div class="text-[7.5px] font-bold text-slate-500 bg-slate-100 px-1 py-0.5 rounded border border-slate-200 shrink-0">${appState.date}</div>
+        </div>
+      `;
+
+      if (!appState.title && !appState.author) {
+        // clear 4-up slots if empty
+        document.querySelectorAll('.meta-slot-4up').forEach(slot => slot.innerHTML = '');
+        return;
+      }
+
+      // Inject into all 4 slots
+      for (let i = 1; i <= 4; i++) {
+        const slot = document.getElementById(`meta-slot-4up-${i}`);
+        if(slot) slot.innerHTML = html4Up;
+      }
+    }
+
+    // --- Format Logic ---
+    function formatPythonCode(code) {
+      let f = code.replace(/\t/g, '    '); // Tabs to spaces
+      f = f.split('\n').map(line => line.trimEnd()).join('\n'); // Trim trailing space
+      f = f.replace(/\n{3,}/g, '\n\n'); // Max 2 consecutive newlines
+      return f.trim(); // Trim start/end
+    }
+
+    // --- Super Dynamic Auto-Fit Algorithm ---
+    function applyAutoFit() {
+      const wrappers = document.querySelectorAll('.code-box-wrapper');
+      wrappers.forEach(wrapper => {
+        const pre = wrapper.querySelector('pre');
+        const cutBox = wrapper.closest('.cut-box');
+        
+        // 1. Reset states for measurement
+        pre.style.fontSize = '12px';
+        wrapper.style.height = '100%';
+        cutBox.style.height = '100%';
+        wrapper.parentElement.style.height = '100%';
+        
+        let size = 12;
+        let safetyCount = 0;
+
+        // 2. Shrink Font Size if Overflowing (Down to 6px)
+        while(pre.scrollHeight > wrapper.clientHeight && size > 6 && safetyCount < 50) {
+            size -= 0.5;
+            pre.style.fontSize = size + 'px';
+            safetyCount++;
+        }
+
+        // 3. If it STILL overflows at minimum size, break constraints & Stretch Wide/Tall!
+        if (pre.scrollHeight > wrapper.clientHeight) {
+            wrapper.style.height = 'auto';
+            cutBox.style.height = 'auto';
+            wrapper.parentElement.style.height = 'auto';
+        } else {
+            // 4. If there is dead space, smoothly increase font size (Up to 16px)
+            safetyCount = 0;
+            while(pre.scrollHeight < wrapper.clientHeight && size < 16 && safetyCount < 50) {
+                size += 0.5;
+                pre.style.fontSize = size + 'px';
+                if (pre.scrollHeight > wrapper.clientHeight) {
+                    size -= 0.5; // Backtrack one step if it overflows
+                    pre.style.fontSize = size + 'px';
+                    break;
+                }
+                safetyCount++;
+            }
+        }
+      });
+    }
+
+    // --- Core Render Function ---
+    function renderPreview() {
+      // Manage Body Classes for Layout Switch
+      if (appState.orientation === 'landscape') {
+        document.body.classList.remove('portrait-mode');
+        document.body.classList.add('landscape-mode');
+      } else {
+        document.body.classList.remove('landscape-mode');
+        document.body.classList.add('portrait-mode');
+      }
+
+      // Sync All 4 Python Editors and Paper Blocks
+      for (let i = 1; i <= 4; i++) {
+        // 1. Sync Left Side Editor
+        els[`codeInput${i}`].value = appState[`code${i}`];
+        els[`codeHighlight${i}`].textContent = appState[`code${i}`] + (appState[`code${i}`].endsWith('\n') ? ' ' : '');
+        Prism.highlightElement(els[`codeHighlight${i}`]);
+
+        // 2. Sync Right Side Print Preview
+        const el = document.getElementById(`code-preview-4up-${i}`);
+        if (el) {
+          el.textContent = appState[`code${i}`];
+          Prism.highlightElement(el);
+        }
+      }
+
+      // Execute Dynamic Meta Placement
+      updateMeta();
+      
+      // Let DOM paint, then calculate sizes
+      setTimeout(applyAutoFit, 10);
+    }
+
+    // --- Event Listeners ---
+
+    // Orientation Dropdown Listener
+    els.orientationSelect.addEventListener('change', (e) => {
+      appState.orientation = e.target.value;
+      renderPreview();
+    });
+
+    // Setup Sync for all 4 Python Editors
+    for (let i = 1; i <= 4; i++) {
+      // Input handling
+      els[`codeInput${i}`].addEventListener('input', (e) => {
+        appState[`code${i}`] = e.target.value;
+        renderPreview();
+      });
+      // Scroll syncing
+      els[`codeInput${i}`].addEventListener('scroll', () => {
+        els[`codeHighlight${i}`].parentElement.scrollTop = els[`codeInput${i}`].scrollTop;
+        els[`codeHighlight${i}`].parentElement.scrollLeft = els[`codeInput${i}`].scrollLeft;
+      });
+      
+      // Copy Button
+      document.getElementById(`btn-copy-${i}`).addEventListener('click', () => {
+        navigator.clipboard.writeText(appState[`code${i}`]);
+        const btn = document.getElementById(`btn-copy-${i}`);
+        const original = btn.innerHTML;
+        btn.innerHTML = `<svg class="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!`;
+        setTimeout(() => btn.innerHTML = original, 1500);
+      });
+    }
+
+    // Format All Button
+    document.getElementById('btn-format-all').addEventListener('click', () => {
+      for(let i = 1; i <= 4; i++) {
+        appState[`code${i}`] = formatPythonCode(appState[`code${i}`]);
+      }
+      renderPreview();
+
+      const btn = document.getElementById('btn-format-all');
+      const original = btn.innerHTML;
+      btn.innerHTML = `<svg class="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> <span class="text-green-400">All Formatted</span>`;
+      setTimeout(() => btn.innerHTML = original, 1500);
+    });
+
+    // Metadata Inputs
+    ['title', 'author', 'date'].forEach(key => {
+      els[`meta${key.charAt(0).toUpperCase() + key.slice(1)}`].addEventListener('input', (e) => {
+        appState[key] = e.target.value;
+        renderPreview();
+      });
+    });
+
+    // Print Settings Toggles (Targets all cut boxes)
+    document.getElementById('toggle-cut').addEventListener('change', (e) => {
+      const boxes = document.querySelectorAll('.cut-box');
+      if(e.target.checked) {
+        document.body.classList.remove('hide-cut-lines');
+        boxes.forEach(b => {
+          b.classList.add('border-slate-400');
+          b.classList.remove('border-transparent');
+        });
+      } else {
+        document.body.classList.add('hide-cut-lines');
+        boxes.forEach(b => {
+          b.classList.remove('border-slate-400');
+          b.classList.add('border-transparent');
+        });
+      }
+    });
+
+    // Print Action (Ensures formatting before print)
+    document.getElementById('btn-print').addEventListener('click', () => {
+      // Auto Format right before print just to ensure maximum space efficiency
+      for(let i = 1; i <= 4; i++) {
+        appState[`code${i}`] = formatPythonCode(appState[`code${i}`]);
+      }
+      renderPreview();
+      // Wait for DOM to catch up & auto-fit before triggering print
+      setTimeout(() => window.print(), 200);
+    });
+
+    // --- Initialization ---
+    els.metaDate.value = appState.date;
+    
+    // Format initial state immediately for best fit
+    for(let i = 1; i <= 4; i++) {
+        appState[`code${i}`] = formatPythonCode(appState[`code${i}`]);
+    }
+    renderPreview();
+    
+    // Re-calculate layout if window resizes to keep preview accurate
+    window.addEventListener('resize', () => {
+       setTimeout(applyAutoFit, 50);
+    });
+
+  </script>
+</body>
+</html>
