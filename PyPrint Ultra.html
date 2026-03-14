@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyPrint Ultra ♾️</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- PrismJS for Real-Time Syntax Highlighting -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+
+  <!-- AlaSQL for In-Browser Automatic SQL Execution (Updated to Stable CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.3.2/alasql.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       ULTRA PRINT ENGINE ♾️
+       ========================================================================== */
+    @media print {
+      /* MATHEMATICAL PERFECTION FOR A4 CENTERED CUTS (175mm x 225mm) */
+      @page { 
+        size: A4 portrait; 
+        margin: 36mm 17.5mm; 
+      }
+      
+      body, html { 
+        background: white !important; 
+        color: black !important;
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important; 
+        width: 100% !important;
+        height: auto !important;
+      }
+      
+      .no-print { display: none !important; }
+      
+      .print-reset-layout {
+         display: block !important;
+         width: 100% !important;
+         height: auto !important;
+         min-height: 0 !important;
+         overflow: visible !important;
+         margin: 0 !important;
+         padding: 0 !important;
+         position: static !important;
+      }
+
+      /* Dynamically adjusting master page wrapper */
+      .print-flex-page {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        min-height: 22.5cm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      body.hide-cut-lines .cut-marker { display: none !important; }
+
+      /* --- SMART PAGE BREAKING ENGINE --- */
+      /* Prevents headers from being left at the bottom of a page */
+      .print-keep-with-next { 
+        break-after: avoid !important; 
+        page-break-after: avoid !important; 
+        break-inside: avoid !important; 
+      }
+      /* Prevents elements from being sliced horizontally */
+      .print-avoid-break-inside { 
+        break-inside: avoid !important; 
+        page-break-inside: avoid !important; 
+      }
+      
+      pre[class*="language-"] { 
+        white-space: pre-wrap !important; 
+        word-wrap: break-word !important; 
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+      }
+      
+      /* Dark Theme Print Overrides */
+      .terminal-print-bg { background: #1e1e1e !important; border: 1px solid #333 !important; }
+      .terminal-text, .terminal-text * { color: #ffffff !important; } /* Keep output white during print */
+    }
+    
+    /* ==========================================================================
+       ULTRA UI/UX STYLES
+       ========================================================================== */
+    .glass-nav {
+      background: rgba(10, 12, 16, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .animated-bg {
+      background: linear-gradient(-45deg, #0a0c10, #111827, #0f172a, #0a0c10);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); border: 2px solid transparent; background-clip: padding-box; }
+
+    /* Custom Input Glowing Focus */
+    .ultra-input:focus {
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+      border-color: #38bdf8;
+    }
+
+    /* Enforce Black & Bold Syntax on Paper (For Readability) */
+    .cut-box pre[class*="language-"] code, 
+    .cut-box pre[class*="language-"] .token {
+      color: #000 !important;
+      text-shadow: none !important;
+      font-weight: bold !important;
+    }
+
+    /* Prism Editor Sync Hack */
+    .editor-wrapper { position: relative; }
+    .highlight-layer, .input-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      padding: 1.25rem; font-family: monospace; font-size: 14px; line-height: 1.5;
+      white-space: pre-wrap; word-wrap: break-word; overflow-y: auto;
+    }
+    .input-layer {
+      color: transparent; background: transparent; caret-color: #fff; z-index: 2; resize: none;
+    }
+    .highlight-layer { z-index: 1; pointer-events: none; }
+    
+    /* Toggle Cut Lines Hidden State outside of print */
+    body.hide-cut-lines .cut-marker { display: none !important; }
+  </style>
+</head>
+<body class="animated-bg h-screen font-sans text-gray-100 flex flex-col overflow-hidden print-reset-layout selection:bg-blue-500/30">
+
+  <!-- ==========================================
+       ULTRA NAVBAR
+       ========================================== -->
+  <nav class="no-print glass-nav px-6 py-4 flex items-center justify-between relative z-30 shadow-2xl">
+    <div class="flex items-center gap-4">
+      <div class="relative group cursor-pointer">
+        <div class="absolute inset-0 bg-blue-500 blur-md opacity-40 group-hover:opacity-75 transition duration-300 rounded-xl"></div>
+        <div class="relative bg-gradient-to-br from-blue-600 to-indigo-700 p-2 rounded-xl border border-white/10 shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+      </div>
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-blue-100 to-indigo-300 bg-clip-text text-transparent drop-shadow-sm">
+          PyPrint Ultra <span class="text-xs align-top text-blue-400 font-mono ml-1 border border-blue-500/30 px-1.5 py-0.5 rounded-full bg-blue-500/10">v5.0</span>
+        </h1>
+        <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400 font-semibold mt-0.5">Dual-Engine Print Studio</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <!-- Dual Print Controller Toggles -->
+      <div class="flex items-center gap-4 border-r border-slate-700/50 pr-5 mr-1 hidden md:flex">
+        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-blue-300 hover:text-blue-200 transition">
+          <input type="checkbox" id="toggle-print-py" class="accent-blue-500 w-4 h-4 cursor-pointer" checked>
+          Print Python
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-teal-300 hover:text-teal-200 transition">
+          <input type="checkbox" id="toggle-print-sql" class="accent-teal-500 w-4 h-4 cursor-pointer" checked>
+          Print MySQL
+        </label>
+        <div class="h-4 w-px bg-slate-700/50 mx-1"></div>
+        <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-300 hover:text-white transition">
+          <input type="checkbox" id="toggle-cut" class="accent-slate-500 w-4 h-4 cursor-pointer" checked>
+          Show Cut Lines
+        </label>
+      </div>
+
+      <button id="btn-print" class="group relative flex items-center gap-2 px-8 py-2.5 bg-white text-slate-900 rounded-xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] active:scale-95 overflow-hidden">
+        <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-black/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+        Print Project
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       MAIN WORKSPACE
+       ========================================== -->
+  <div class="flex-1 flex flex-col lg:flex-row min-h-0 relative z-10 print-reset-layout">
+    
+    <!-- LEFT COLUMN: IDE -->
+    <div class="no-print w-full lg:w-[50%] flex flex-col border-r border-white/5 p-5 gap-6 overflow-y-auto custom-scrollbar bg-black/20 backdrop-blur-xl">
+      
+      <!-- Project Metadata Card -->
+      <div class="bg-[#121620]/80 border border-white/10 rounded-2xl p-4 shadow-xl backdrop-blur-md shrink-0">
+        <div class="flex items-center gap-2 mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-indigo-400"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">Project Details</span>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <input type="text" id="meta-title" placeholder="Project / Assignment Title" class="ultra-input col-span-3 lg:col-span-1 bg-black/40 border border-white/5 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-all">
+          <input type="text" id="meta-author" placeholder="Student / Author Name" class="ultra-input col-span-3 lg:col-span-1 bg-black/40 border border-white/5 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-all">
+          <input type="date" id="meta-date" class="ultra-input col-span-3 lg:col-span-1 bg-black/40 border border-white/5 rounded-lg px-3 py-2 text-sm text-slate-300 outline-none transition-all [color-scheme:dark]">
+        </div>
+      </div>
+
+      <!-- ================= PYTHON ENGINE ================= -->
+      <div class="flex items-center gap-3">
+        <div class="h-px bg-white/10 flex-1"></div>
+        <span class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg> Python Engine
+        </span>
+        <div class="h-px bg-white/10 flex-1"></div>
+      </div>
+
+      <!-- Python Code Editor -->
+      <div class="shrink-0 h-[300px] flex flex-col bg-[#121620]/80 border border-white/10 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden">
+        <div class="bg-black/40 border-b border-white/5 px-4 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-blue-400"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">main.py</span>
+          </div>
+          <div class="flex gap-2">
+            <button id="btn-format-py" class="text-xs font-bold flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-all active:scale-95">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg> Format
+            </button>
+            <button id="btn-copy-py" class="text-xs font-bold flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-all active:scale-95">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy
+            </button>
+          </div>
+        </div>
+        <div class="editor-wrapper flex-1 bg-[#0d1117] custom-scrollbar">
+          <pre id="code-highlight" class="highlight-layer language-python !bg-transparent !m-0 !shadow-none"><code class="language-python"></code></pre>
+          <textarea id="code-input" spellcheck="false" class="input-layer custom-scrollbar focus:outline-none" placeholder="# Write your Python code here..."></textarea>
+        </div>
+      </div>
+
+      <!-- Python Output Section -->
+      <div class="shrink-0 h-[160px] bg-[#121620]/80 border border-white/10 rounded-2xl shadow-xl backdrop-blur-md flex flex-col overflow-hidden relative">
+        <div class="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none"></div>
+        <div class="bg-black/40 border-b border-white/5 px-4 py-2.5 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-blue-400"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+          <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">Python Result</span>
+        </div>
+        <textarea id="output-input" spellcheck="false" class="flex-1 w-full bg-[#050505] p-4 font-mono text-[14px] leading-relaxed text-white focus:outline-none resize-none custom-scrollbar" placeholder="> Python output will appear here..."></textarea>
+      </div>
+
+      <!-- ================= MYSQL ENGINE ================= -->
+      <div class="flex items-center gap-3 mt-4">
+        <div class="h-px bg-white/10 flex-1"></div>
+        <span class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <svg class="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg> MySQL Engine
+        </span>
+        <div class="h-px bg-white/10 flex-1"></div>
+      </div>
+
+      <!-- SQL Code Editor -->
+      <div class="shrink-0 h-[250px] flex flex-col bg-[#121620]/80 border border-white/10 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden">
+        <div class="bg-black/40 border-b border-white/5 px-4 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-teal-400"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">query.sql</span>
+            <span class="text-[9px] bg-teal-500/20 text-teal-400 border border-teal-500/30 px-2 py-0.5 rounded uppercase tracking-wider ml-2 flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></div> Auto-Run Active</span>
+          </div>
+          <div class="flex gap-2">
+            <button id="btn-format-sql" class="text-xs font-bold flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-all active:scale-95">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg> Format
+            </button>
+            <button id="btn-copy-sql" class="text-xs font-bold flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5 transition-all active:scale-95">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy
+            </button>
+          </div>
+        </div>
+        <div class="editor-wrapper flex-1 bg-[#0d1117] custom-scrollbar">
+          <pre id="sql-highlight" class="highlight-layer language-sql !bg-transparent !m-0 !shadow-none"><code class="language-sql"></code></pre>
+          <textarea id="sql-input" spellcheck="false" class="input-layer custom-scrollbar focus:outline-none" placeholder="-- Write your MySQL query here..."></textarea>
+        </div>
+      </div>
+
+      <!-- SQL Output Section (Fully Auto) -->
+      <div class="shrink-0 h-[220px] bg-[#121620]/80 border border-white/10 rounded-2xl shadow-xl backdrop-blur-md flex flex-col overflow-hidden relative">
+        <div class="absolute inset-0 bg-gradient-to-b from-teal-500/5 to-transparent pointer-events-none"></div>
+        <div class="bg-black/40 border-b border-white/5 px-4 py-2.5 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-teal-400"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+          <span class="text-xs font-bold text-slate-300 uppercase tracking-widest">MySQL Result (Live)</span>
+        </div>
+        <textarea id="sql-output-input" spellcheck="false" class="flex-1 w-full bg-[#050505] p-4 font-mono text-[13px] leading-relaxed text-white focus:outline-none resize-none custom-scrollbar" placeholder="> Execution result will appear automatically..."></textarea>
+      </div>
+      
+      <!-- Spacer for bottom padding -->
+      <div class="h-4 shrink-0"></div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Live Print Preview -->
+    <div class="w-full lg:w-[50%] bg-[#cbd5e1] overflow-y-auto p-4 md:p-8 flex flex-col items-center custom-scrollbar print-reset-layout shadow-inner relative">
+      
+      <!-- Ambient light effect behind paper -->
+      <div class="no-print absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-white/40 blur-[100px] pointer-events-none"></div>
+
+      <div class="relative mt-8 mb-12 print-reset-layout w-full flex flex-col items-center gap-8">
+        
+        <!-- UI Label -->
+        <div class="no-print absolute -top-10 left-1/2 -translate-x-1/2 w-max max-w-full flex flex-col items-center text-slate-600 font-bold text-sm z-10 gap-2">
+          <div class="flex items-center gap-2 bg-white/70 px-4 py-2 rounded-xl shadow-md backdrop-blur-md border border-white/50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 text-blue-600"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg>
+            <span>Target Framework: <span class="text-black">17.5cm × 22.5cm</span></span>
+          </div>
+          <span class="text-[10px] uppercase tracking-widest bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-md shadow-sm">Dual Engine Print Active</span>
+        </div>
+
+        <!-- ================= MASTER A4 FLEX CONTAINER ================= -->
+        <!-- This container handles layout and paging intelligently for all 4 distinct boxes. -->
+        <div class="print-flex-page w-[17.5cm] flex flex-col gap-6" id="master-paper-container">
+
+          <!-- ================= PAPER BOX 1: PYTHON SOURCE CODE ================= -->
+          <div class="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-2 border-dashed border-slate-400 relative transition-all duration-300 cut-box flex flex-col w-full" id="paper-container-code" style="display: none;">
+            <div class="absolute -top-[2px] left-4 bg-white px-2 text-[10px] text-slate-500 font-mono tracking-widest transform -translate-y-1/2 flex items-center gap-1 cut-marker z-10">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg> CUT HERE (PYTHON CODE)
+            </div>
+
+            <div class="p-[12mm] text-black w-full h-full flex flex-col relative">
+              <div id="meta-slot-py-code" class="meta-slot"></div> <!-- Dynamic Meta Slot -->
+
+              <div id="code-container" class="mb-2">
+                <div class="bg-white border border-slate-200 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] print-border overflow-hidden print-avoid-break-inside">
+                  <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between print-keep-with-next print-header-color">
+                    <div class="flex gap-1.5">
+                      <div class="w-3 h-3 rounded-full bg-[#ff5f56] shadow-sm border border-black/5"></div>
+                      <div class="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-sm border border-black/5"></div>
+                      <div class="w-3 h-3 rounded-full bg-[#27c93f] shadow-sm border border-black/5"></div>
+                    </div>
+                    <span class="text-[11px] font-mono font-bold text-slate-600">main.py</span>
+                    <div class="w-10"></div>
+                  </div>
+                  <div class="p-6 overflow-x-auto custom-scrollbar bg-white">
+                    <pre class="!m-0 !p-0 !bg-transparent text-[12px] leading-relaxed"><code id="code-preview" class="language-python print-text-wrap break-all text-black font-bold"></code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================= PAPER BOX 2: PYTHON EXECUTION RESULT ================= -->
+          <div class="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-2 border-dashed border-slate-400 relative transition-all duration-300 cut-box flex flex-col w-full print-avoid-break-inside" id="paper-container-output" style="display: none;">
+            <div class="absolute -top-[2px] left-4 bg-white px-2 text-[10px] text-slate-500 font-mono tracking-widest transform -translate-y-1/2 flex items-center gap-1 cut-marker z-10">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg> CUT HERE (PYTHON RESULT)
+            </div>
+
+            <div class="p-[12mm] text-black w-full h-full flex flex-col relative">
+              <div id="meta-slot-py-out" class="meta-slot"></div> <!-- Dynamic Meta Slot -->
+
+              <div id="output-container" class="mb-2">
+                <div class="terminal-print-bg bg-[#1e1e1e] border border-[#333] rounded-xl shadow-[0_15px_35px_rgba(0,0,0,0.3)] print-border overflow-hidden print-avoid-break-inside">
+                  <div class="bg-[#2d2d2d] border-b border-[#111] px-4 py-3 flex items-center justify-between print-keep-with-next print-header-color">
+                     <div class="flex gap-1.5">
+                       <div class="w-3 h-3 rounded-full bg-[#ff5f56] shadow-sm border border-black/10"></div>
+                       <div class="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-sm border border-black/10"></div>
+                       <div class="w-3 h-3 rounded-full bg-[#27c93f] shadow-sm border border-black/10"></div>
+                     </div>
+                     <span class="text-[11px] font-mono text-slate-300 font-bold tracking-wide">bash - Terminal</span>
+                     <div class="w-10"></div>
+                  </div>
+                  <div class="p-6 overflow-hidden">
+                    <pre class="!m-0 !bg-transparent text-[14px] font-mono"><code id="output-preview" class="terminal-text text-white print-text-wrap break-all whitespace-pre-wrap leading-relaxed block"></code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================= PAPER BOX 3: SQL CODE ================= -->
+          <div class="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-2 border-dashed border-slate-400 relative transition-all duration-300 cut-box flex flex-col w-full" id="paper-container-sql-code" style="display: none;">
+            <div class="absolute -top-[2px] left-4 bg-white px-2 text-[10px] text-slate-500 font-mono tracking-widest transform -translate-y-1/2 flex items-center gap-1 cut-marker z-10">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg> CUT HERE (SQL QUERY)
+            </div>
+
+            <div class="p-[12mm] text-black w-full h-full flex flex-col relative">
+              <div id="meta-slot-sql-code" class="meta-slot"></div> <!-- Dynamic Meta Slot -->
+
+              <div id="sql-code-container" class="mb-2">
+                <div class="bg-white border border-slate-200 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] print-border overflow-hidden print-avoid-break-inside">
+                  <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between print-keep-with-next print-header-color">
+                    <div class="flex gap-1.5">
+                      <div class="w-3 h-3 rounded-full bg-[#ff5f56] shadow-sm border border-black/5"></div>
+                      <div class="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-sm border border-black/5"></div>
+                      <div class="w-3 h-3 rounded-full bg-[#27c93f] shadow-sm border border-black/5"></div>
+                    </div>
+                    <span class="text-[11px] font-mono font-bold text-slate-600">query.sql</span>
+                    <div class="w-10"></div>
+                  </div>
+                  <div class="p-6 overflow-x-auto custom-scrollbar bg-white">
+                    <pre class="!m-0 !p-0 !bg-transparent text-[12px] leading-relaxed"><code id="sql-code-preview" class="language-sql print-text-wrap break-all text-black font-bold"></code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================= PAPER BOX 4: SQL EXECUTION RESULT ================= -->
+          <div class="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-2 border-dashed border-slate-400 relative transition-all duration-300 cut-box flex flex-col w-full print-avoid-break-inside" id="paper-container-sql-output" style="display: none;">
+            <div class="absolute -top-[2px] left-4 bg-white px-2 text-[10px] text-slate-500 font-mono tracking-widest transform -translate-y-1/2 flex items-center gap-1 cut-marker z-10">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" x2="8.12" y1="4" y2="15.88"/><line x1="14.47" x2="20" y1="14.48" y2="20"/><line x1="8.12" x2="12" y1="8.12" y2="12"/></svg> CUT HERE (SQL RESULT)
+            </div>
+
+            <div class="p-[12mm] text-black w-full h-full flex flex-col relative">
+              <div id="meta-slot-sql-out" class="meta-slot"></div> <!-- Dynamic Meta Slot -->
+
+              <div id="sql-output-container" class="mb-2">
+                <div class="terminal-print-bg bg-[#1e1e1e] border border-[#333] rounded-xl shadow-[0_15px_35px_rgba(0,0,0,0.3)] print-border overflow-hidden print-avoid-break-inside">
+                  <div class="bg-[#2d2d2d] border-b border-[#111] px-4 py-3 flex items-center justify-between print-keep-with-next print-header-color">
+                     <div class="flex gap-1.5">
+                       <div class="w-3 h-3 rounded-full bg-[#ff5f56] shadow-sm border border-black/10"></div>
+                       <div class="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-sm border border-black/10"></div>
+                       <div class="w-3 h-3 rounded-full bg-[#27c93f] shadow-sm border border-black/10"></div>
+                     </div>
+                     <span class="text-[11px] font-mono text-slate-300 font-bold tracking-wide">mysql - Terminal</span>
+                     <div class="w-10"></div>
+                  </div>
+                  <div class="p-6 overflow-hidden">
+                    <pre class="!m-0 !bg-transparent text-[13px] font-mono"><code id="sql-output-preview" class="terminal-text text-white whitespace-pre font-mono leading-relaxed block overflow-x-auto custom-scrollbar pb-2"></code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- /End Master Flex Container -->
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================
+       ULTRA LOGIC ENGINE
+       ========================================== -->
+  <script>
+    // --- Initial State ---
+    let appState = {
+      printPython: true,
+      printMySQL: true,
+      code: `def calculate_fibonacci(n):\n    """\n    Calculate the first n Fibonacci numbers.\n    Ultimate dynamic sequence generator.\n    """\n    if n <= 0:\n        return []\n    elif n == 1:\n        return [0]\n    \n    sequence = [0, 1]\n    while len(sequence) < n:\n        next_val = sequence[-1] + sequence[-2]\n        sequence.append(next_val)\n        \n    return sequence\n\n# Generate the first 10 Fibonacci numbers\nresult = calculate_fibonacci(10)\nprint(f"Fibonacci sequence: {result}")`,
+      output: `Fibonacci sequence: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]`,
+      sqlCode: `SELECT \n    id, \n    username, \n    email, \n    created_at \nFROM users \nWHERE active = 1 \nORDER BY created_at DESC;`,
+      sqlOutput: ``,
+      title: '',
+      author: '',
+      date: new Date().toISOString().split('T')[0] // Today
+    };
+
+    // --- DOM Elements ---
+    const els = {
+      // Python Elements
+      codeInput: document.getElementById('code-input'),
+      codeHighlight: document.getElementById('code-highlight').querySelector('code'),
+      outputInput: document.getElementById('output-input'),
+      
+      // SQL Elements
+      sqlCodeInput: document.getElementById('sql-input'),
+      sqlCodeHighlight: document.getElementById('sql-highlight').querySelector('code'),
+      sqlOutputInput: document.getElementById('sql-output-input'),
+
+      // Meta Elements
+      metaTitle: document.getElementById('meta-title'),
+      metaAuthor: document.getElementById('meta-author'),
+      metaDate: document.getElementById('meta-date'),
+      
+      // Print Containers
+      codeContainer: document.getElementById('code-container'),
+      codePreview: document.getElementById('code-preview'),
+      paperCode: document.getElementById('paper-container-code'),
+      
+      paperOutput: document.getElementById('paper-container-output'),
+      outputContainer: document.getElementById('output-container'),
+      outputPreview: document.getElementById('output-preview'),
+
+      sqlCodeContainer: document.getElementById('sql-code-container'),
+      sqlCodePreview: document.getElementById('sql-code-preview'),
+      paperSqlCode: document.getElementById('paper-container-sql-code'),
+
+      paperSqlOutput: document.getElementById('paper-container-sql-output'),
+      sqlOutputContainer: document.getElementById('sql-output-container'),
+      sqlOutputPreview: document.getElementById('sql-output-preview'),
+    };
+
+    // --- In-Browser DB Initialization (AlaSQL) ---
+    function initializeDB() {
+      try {
+        alasql("CREATE TABLE users (id INT, username STRING, email STRING, active INT, created_at STRING)");
+        alasql("INSERT INTO users VALUES (1, 'admin', 'admin@py.com', 1, '2023-10-01 10:00:00')");
+        alasql("INSERT INTO users VALUES (2, 'guest', 'guest@py.com', 0, '2023-10-01 12:00:00')");
+        alasql("INSERT INTO users VALUES (3, 's_connor', 'sarah@skynet.com', 1, '2023-10-01 15:45:00')");
+        alasql("INSERT INTO users VALUES (4, 't_stark', 'tony@stark.com', 1, '2023-10-02 09:15:00')");
+        alasql("INSERT INTO users VALUES (5, 'j_doe', 'doe@python.org', 1, '2023-10-02 11:30:00')");
+      } catch (e) {
+        console.warn("DB already initialized or error: ", e);
+      }
+    }
+
+    // Helper: Convert JSON Array to ASCII Table (MySQL style)
+    function jsonToMySQLTable(data, timeMs) {
+      if (!data || data.length === 0) return "Empty set (" + (timeMs/1000).toFixed(2) + " sec)";
+      if (typeof data[0] !== 'object' || Array.isArray(data[0])) {
+         return "Query OK (" + (timeMs/1000).toFixed(2) + " sec)";
+      }
+      
+      let cols = Object.keys(data[0]);
+      let colWidths = {};
+      cols.forEach(c => colWidths[c] = String(c).length);
+      
+      data.forEach(row => {
+         cols.forEach(c => {
+             let val = row[c];
+             let str = val === null ? "NULL" : String(val);
+             if (str.length > colWidths[c]) colWidths[c] = str.length;
+         });
+      });
+      
+      let sep = "+" + cols.map(c => "-".repeat(colWidths[c] + 2)).join("+") + "+";
+      
+      let lines = [];
+      lines.push(sep);
+      lines.push("|" + cols.map(c => " " + String(c).padEnd(colWidths[c]) + " ").join("|") + "|");
+      lines.push(sep);
+      
+      data.forEach(row => {
+          lines.push("|" + cols.map(c => {
+              let val = row[c] === null ? "NULL" : String(row[c]);
+              return " " + val.padEnd(colWidths[c]) + " ";
+          }).join("|") + "|");
+      });
+      lines.push(sep);
+      lines.push(data.length + " row" + (data.length > 1 ? "s" : "") + " in set (" + (timeMs/1000).toFixed(2) + " sec)");
+      return lines.join("\n");
+    }
+
+    // Automatic SQL Execution Engine
+    function executeSQL() {
+      if(!appState.sqlCode.trim()) {
+        appState.sqlOutput = "";
+        renderPreview();
+        return;
+      }
+      try {
+        let t0 = performance.now();
+        // Remove trailing semicolons as AlaSQL sometimes gets strict about them
+        let cleanQuery = appState.sqlCode.replace(/;\s*$/, "");
+        let res = alasql(cleanQuery);
+        let t1 = performance.now();
+        
+        if (Array.isArray(res)) {
+          if (res.length > 0 && typeof res[0] === 'object') {
+             appState.sqlOutput = jsonToMySQLTable(res, t1 - t0);
+          } else if (res.length === 0) {
+             appState.sqlOutput = "Empty set ("+((t1-t0)/1000).toFixed(2)+" sec)";
+          } else {
+             appState.sqlOutput = "Query OK, " + res + " rows affected ("+((t1-t0)/1000).toFixed(2)+" sec)";
+          }
+        } else {
+           appState.sqlOutput = "Query OK ("+((t1-t0)/1000).toFixed(2)+" sec)";
+        }
+      } catch (err) {
+        appState.sqlOutput = "ERROR 1064 (42000): " + err.message;
+      }
+      renderPreview();
+    }
+
+    // --- Dynamic Meta Header Injection ---
+    // Places the header in the *first* visible cut-box so it's always at the top
+    function updateMeta() {
+      const slots = document.querySelectorAll('.meta-slot');
+      slots.forEach(slot => slot.innerHTML = ''); // clear all
+
+      if (!appState.title && !appState.author) return;
+
+      const html = `
+        <div class="mb-6 border-b-2 border-slate-800 pb-3 flex justify-between items-end print-avoid-break-inside">
+          <div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-tight">${appState.title || 'Untitled Project'}</h1>
+            <p class="text-sm font-bold text-slate-600 mt-1 uppercase tracking-wider">${appState.author || 'Anonymous'}</p>
+          </div>
+          <div class="text-sm font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-md border border-slate-200">${appState.date}</div>
+        </div>
+      `;
+
+      // Find first visible box based on current toggles and content
+      if (appState.printPython && appState.code.trim()) {
+        document.getElementById('meta-slot-py-code').innerHTML = html;
+      } else if (appState.printPython && appState.output.trim()) {
+        document.getElementById('meta-slot-py-out').innerHTML = html;
+      } else if (appState.printMySQL && appState.sqlCode.trim()) {
+        document.getElementById('meta-slot-sql-code').innerHTML = html;
+      } else if (appState.printMySQL && appState.sqlOutput.trim()) {
+        document.getElementById('meta-slot-sql-out').innerHTML = html;
+      }
+    }
+
+    // --- Core Render Function ---
+    function renderPreview() {
+      // 1. Sync Editor Highlighting (Python)
+      els.codeInput.value = appState.code;
+      els.codeHighlight.textContent = appState.code + (appState.code.endsWith('\n') ? ' ' : '');
+      Prism.highlightElement(els.codeHighlight);
+
+      // Sync Editor Highlighting (SQL)
+      els.sqlCodeInput.value = appState.sqlCode;
+      els.sqlCodeHighlight.textContent = appState.sqlCode + (appState.sqlCode.endsWith('\n') ? ' ' : '');
+      Prism.highlightElement(els.sqlCodeHighlight);
+
+      // 2. Render Python Code Preview (Only if toggle is ON)
+      if (appState.code.trim() && appState.printPython) {
+        els.paperCode.style.display = 'flex';
+        els.codePreview.textContent = appState.code;
+        Prism.highlightElement(els.codePreview);
+      } else {
+        els.paperCode.style.display = 'none';
+      }
+
+      // 3. Render Python Output Preview (Only if toggle is ON)
+      if (appState.output.trim() && appState.printPython) {
+        els.paperOutput.style.display = 'flex';
+        els.outputInput.value = appState.output;
+        els.outputPreview.textContent = appState.output;
+      } else {
+        els.paperOutput.style.display = 'none';
+      }
+
+      // 4. Render SQL Code Preview (Only if toggle is ON)
+      if (appState.sqlCode.trim() && appState.printMySQL) {
+        els.paperSqlCode.style.display = 'flex';
+        els.sqlCodePreview.textContent = appState.sqlCode;
+        Prism.highlightElement(els.sqlCodePreview);
+      } else {
+        els.paperSqlCode.style.display = 'none';
+      }
+
+      // 5. Render SQL Output Preview (Only if toggle is ON)
+      if (appState.sqlOutput.trim() && appState.printMySQL) {
+        els.paperSqlOutput.style.display = 'flex';
+        els.sqlOutputInput.value = appState.sqlOutput;
+        els.sqlOutputPreview.textContent = appState.sqlOutput;
+      } else {
+        els.paperSqlOutput.style.display = 'none';
+      }
+
+      // 6. Execute Dynamic Meta Placement
+      updateMeta();
+    }
+
+    // --- Event Listeners ---
+
+    // Print Toggle Listeners
+    document.getElementById('toggle-print-py').addEventListener('change', (e) => {
+      appState.printPython = e.target.checked;
+      renderPreview();
+    });
+
+    document.getElementById('toggle-print-sql').addEventListener('change', (e) => {
+      appState.printMySQL = e.target.checked;
+      renderPreview();
+    });
+    
+    // Editor Sync (Python)
+    els.codeInput.addEventListener('input', (e) => {
+      appState.code = e.target.value;
+      renderPreview();
+    });
+    els.codeInput.addEventListener('scroll', () => {
+      document.getElementById('code-highlight').parentElement.scrollTop = els.codeInput.scrollTop;
+      document.getElementById('code-highlight').parentElement.scrollLeft = els.codeInput.scrollLeft;
+    });
+
+    // Copy Python
+    document.getElementById('btn-copy-py').addEventListener('click', () => {
+      navigator.clipboard.writeText(appState.code);
+      const btn = document.getElementById('btn-copy-py');
+      const original = btn.innerHTML;
+      btn.innerHTML = `<svg class="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!`;
+      setTimeout(() => btn.innerHTML = original, 1500);
+    });
+
+    // Editor Sync (SQL) with Auto-Execution Debounce
+    let sqlTimeout;
+    els.sqlCodeInput.addEventListener('input', (e) => {
+      appState.sqlCode = e.target.value;
+      renderPreview(); // Update highlight instantly
+      
+      clearTimeout(sqlTimeout);
+      sqlTimeout = setTimeout(() => {
+        executeSQL(); // Run query automatically after 500ms
+      }, 500);
+    });
+    els.sqlCodeInput.addEventListener('scroll', () => {
+      document.getElementById('sql-highlight').parentElement.scrollTop = els.sqlCodeInput.scrollTop;
+      document.getElementById('sql-highlight').parentElement.scrollLeft = els.sqlCodeInput.scrollLeft;
+    });
+
+    // Copy SQL
+    document.getElementById('btn-copy-sql').addEventListener('click', () => {
+      navigator.clipboard.writeText(appState.sqlCode);
+      const btn = document.getElementById('btn-copy-sql');
+      const original = btn.innerHTML;
+      btn.innerHTML = `<svg class="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!`;
+      setTimeout(() => btn.innerHTML = original, 1500);
+    });
+
+    // Output Sync
+    els.outputInput.addEventListener('input', (e) => {
+      appState.output = e.target.value;
+      renderPreview();
+    });
+    
+    // Allow manual overrides of the SQL output if desired
+    els.sqlOutputInput.addEventListener('input', (e) => {
+      appState.sqlOutput = e.target.value;
+      renderPreview();
+    });
+
+    // Metadata Inputs
+    ['title', 'author', 'date'].forEach(key => {
+      els[`meta${key.charAt(0).toUpperCase() + key.slice(1)}`].addEventListener('input', (e) => {
+        appState[key] = e.target.value;
+        renderPreview();
+      });
+    });
+
+    // --- Actions ---
+
+    function triggerFormat(targetKey, btnId) {
+      let f = appState[targetKey];
+      f = f.replace(/\t/g, '    ');
+      f = f.split('\n').map(line => line.trimEnd()).join('\n');
+      f = f.replace(/\n{3,}/g, '\n\n');
+      appState[targetKey] = f;
+      renderPreview();
+      
+      const btn = document.getElementById(btnId);
+      const original = btn.innerHTML;
+      btn.innerHTML = `<svg class="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Formatted`;
+      setTimeout(() => btn.innerHTML = original, 1500);
+    }
+
+    // Format Code
+    document.getElementById('btn-format-py').addEventListener('click', () => triggerFormat('code', 'btn-format-py'));
+    document.getElementById('btn-format-sql').addEventListener('click', () => triggerFormat('sqlCode', 'btn-format-sql'));
+
+    // Print Settings Toggles (Targets all cut boxes)
+    document.getElementById('toggle-cut').addEventListener('change', (e) => {
+      const boxes = document.querySelectorAll('.cut-box');
+      if(e.target.checked) {
+        document.body.classList.remove('hide-cut-lines');
+        boxes.forEach(b => {
+          b.classList.add('border-slate-400');
+          b.classList.remove('border-transparent');
+        });
+      } else {
+        document.body.classList.add('hide-cut-lines');
+        boxes.forEach(b => {
+          b.classList.remove('border-slate-400');
+          b.classList.add('border-transparent');
+        });
+      }
+    });
+
+    // Print Action
+    document.getElementById('btn-print').addEventListener('click', () => window.print());
+
+    // --- Initialization with Safety Start ---
+    els.metaDate.value = appState.date;
+    
+    // Safety check: ensure AlaSQL is loaded before initializing
+    function startEngine() {
+      if (typeof alasql !== 'undefined') {
+        initializeDB();
+        executeSQL();
+      } else {
+        // If it hasn't loaded yet, try again after a brief moment
+        setTimeout(() => {
+          if (typeof alasql !== 'undefined') {
+            initializeDB();
+            executeSQL();
+          } else {
+            appState.sqlOutput = "ERROR: MySQL Engine (AlaSQL) failed to load. Please check your network/CDN connection.";
+            renderPreview();
+          }
+        }, 1000);
+      }
+    }
+    
+    startEngine();
+  </script>
+</body>
+</html>
